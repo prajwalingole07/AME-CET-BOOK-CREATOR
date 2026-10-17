@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In &middot; AME Cutoff Book Maker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-base: #060911;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --border-card-hover: rgba(245, 158, 11, 0.3);
+
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-dim: #64748b;
+
+            --saffron-start: #ff9933;
+            --saffron-end: #e65100;
+            --gold-glow: rgba(255, 153, 51, 0.4);
+
+            --blue-accent: #38bdf8;
+            --emerald-accent: #10b981;
+            --red-alert: #f87171;
+
+            --radius-card: 24px;
+            --radius-input: 14px;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: #060911;
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* ═══════════ AMBIENT GLOW & MESH BACKGROUND ═══════════ */
+        .ambient-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.35;
+            will-change: transform;
+        }
+
+        .glow-orb.top-left {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, #ff9933 0%, rgba(255,153,51,0) 70%);
+            top: -160px; left: -160px;
+            animation: orbFloat1 18s ease-in-out infinite alternate;
+        }
+
+        .glow-orb.bottom-right {
+            width: 520px; height: 520px;
+            background: radial-gradient(circle, #2563eb 0%, rgba(37,99,235,0) 70%);
+            bottom: -180px; right: -180px;
+            animation: orbFloat2 20s ease-in-out infinite alternate;
+        }
+
+        .glow-orb.center-green {
+            width: 340px; height: 340px;
+            background: radial-gradient(circle, #10b981 0%, rgba(16,185,129,0) 70%);
+            top: 55%; left: 15%;
+            opacity: 0.2;
+            animation: orbFloat1 24s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes orbFloat1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 50px) scale(1.15); }
+        }
+        @keyframes orbFloat2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-60px, -45px) scale(1.1); }
+        }
+
+        .dot-matrix {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(ellipse 65% 65% at 50% 50%, #000 20%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse 65% 65% at 50% 50%, #000 20%, transparent 80%);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        /* ═══════════ GLASS LOGIN CONTAINER ═══════════ */
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-card);
+            padding: 42px 36px 34px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7),
+                        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            transition: border-color 0.3s;
+            animation: cardAppear 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ═══════════ LOGO & HEADER ═══════════ */
+        .card-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-logo-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .brand-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .brand-logo-fallback {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #ff9933);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            background: linear-gradient(90deg, #ffffff, #fbbf24 65%, #f59e0b);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .system-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 10px;
+        }
+
+        /* ═══════════ ERROR ALERT ═══════════ */
+        .error-alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+            border-radius: var(--radius-input);
+            padding: 11px 14px;
+            margin-bottom: 20px;
+            font-size: 12.5px;
+            color: #fca5a5;
+            animation: shakeAlert 0.4s ease-in-out both;
+        }
+        @keyframes shakeAlert {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* ═══════════ FORM FIELDS ═══════════ */
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .input-field-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field-box i.field-icon {
+            position: absolute;
+            left: 15px;
+            color: var(--text-dim);
+            font-size: 14px;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(6, 9, 17, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-input);
+            padding: 13px 44px 13px 42px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-dim);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12.5px;
+        }
+
+        .form-input:focus {
+            background: rgba(6, 9, 17, 0.95);
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18),
+                        0 8px 16px -4px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field-box:focus-within i.field-icon {
+            color: #f59e0b;
+        }
+
+        .btn-eye-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: color 0.2s;
+        }
+        .btn-eye-toggle:hover {
+            color: var(--text-main);
+        }
+
+        /* Options Row */
+        .form-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 2px 24px 2px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .remember-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-checkbox input {
+            accent-color: #f59e0b;
+            width: 15px; height: 15px;
+            cursor: pointer;
+        }
+
+        .security-badge {
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+        }
+
+        /* Submit Button */
+        .btn-login-submit {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-input);
+            background: linear-gradient(135deg, #ff9933, #f59e0b 50%, #d97706);
+            color: #0b0f1a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px -4px rgba(245, 158, 11, 0.35);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login-submit:hover {
+            filter: brightness(1.08);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px -4px rgba(245, 158, 11, 0.45);
+        }
+
+        .btn-login-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-login-submit::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            transform: skewX(-20deg);
+            animation: btnShine 4s infinite;
+        }
+        @keyframes btnShine {
+            0%, 65% { left: -100%; }
+            85%, 100% { left: 150%; }
+        }
+
+        .btn-spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(11, 15, 26, 0.3);
+            border-top-color: #0b0f1a;
+            border-radius: 50%;
+            animation: spinBtn 0.7s linear infinite;
+        }
+        @keyframes spinBtn { to { transform: rotate(360deg); } }
+
+        .btn-login-submit.loading .btn-spinner { display: inline-block; }
+        .btn-login-submit.loading { pointer-events: none; opacity: 0.85; }
+
+        /* Card Footer */
+        .card-footer-notes {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 11.5px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        .card-footer-notes strong {
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-mesh">
+        <div class="glow-orb top-left"></div>
+        <div class="glow-orb bottom-right"></div>
+        <div class="glow-orb center-green"></div>
+        <div class="dot-matrix"></div>
+    </div>
+
+    <!-- Main Login Card -->
+    <div class="login-wrapper">
+        <div class="glass-card">
+
+            <!-- Brand Header -->
+            <div class="card-brand">
+                <div class="brand-logo-wrap">
+                    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="AME Cutoff Book Maker" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <span class="brand-logo-fallback" style="display:none;">AME</span>
+                </div>
+                <h1 class="brand-title">AME Cutoff Book Maker</h1>
+                <p class="brand-subtitle">
+                    <i class="fa-solid fa-graduation-cap" style="color:#fbbf24;"></i>
+                    MHT-CET &amp; AI (JEE) Cut-off Portal
+                </p>
+                <div class="system-pill">
+                    <i class="fa-solid fa-shield-halved"></i> Authorized Access 2027
+                </div>
+            </div>
+
+            <!-- Error Notification -->
+            {% if error %}
+            <div class="error-alert">
+                <i class="fa-solid fa-circle-exclamation" style="font-size:16px;"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="POST" action="/login{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}" id="loginForm" autocomplete="off">
+                <div class="input-group">
+                    <label class="input-label" for="username">
+                        <span>Username</span>
+                    </label>
+                    <div class="input-field-box">
+                        <i class="fa-solid fa-user field-icon"></i>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="Enter username"
+                               value="{{ request.form.get('username', '') }}" required autofocus spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="password">
+                        <span>Password</span>
+                    </label>
+                    <div class="input-field-box">
+                        <i class="fa-solid fa-lock field-icon"></i>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" required>
+                        <button type="button" class="btn-eye-toggle" id="btnTogglePass" title="Toggle password visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options-row">
+                    <label class="remember-checkbox">
+                        <input type="checkbox" name="remember" checked>
+                        <span>Remember me</span>
+                    </label>
+                    <div class="security-badge">
+                        <i class="fa-solid fa-lock-keyhole"></i> End-to-end Verified
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login-submit" id="btnSubmit">
+                    <span class="btn-spinner"></span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span id="btnSubmitText">Sign In to Dashboard</span>
+                </button>
+            </form>
+
+            <div class="card-footer-notes">
+                MHT-CET R1&ndash;R4 + AI (JEE) Rank &amp; Percentile Engine &bull; Auto-Formatted Word Books<br>
+                &copy; 2027 <strong>AME Cutoff Book Maker</strong>. All rights reserved.
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const passInp = document.getElementById('password');
+        const eyeBtn = document.getElementById('btnTogglePass');
+
+        eyeBtn.addEventListener('click', () => {
+            const isText = passInp.type === 'text';
+            passInp.type = isText ? 'password' : 'text';
+            eyeBtn.innerHTML = isText ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
+            passInp.focus();
+        });
+
+        const form = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('btnSubmit');
+        const submitText = document.getElementById('btnSubmitText');
+
+        form.addEventListener('submit', () => {
+            submitBtn.classList.add('loading');
+            submitText.textContent = 'Authenticating...';
+        });
+
+        {% if error %}
+        if (passInp) {
+            passInp.value = '';
+            passInp.focus();
+        }
+        {% endif %}
+    </script>
+</body>
+</html>
